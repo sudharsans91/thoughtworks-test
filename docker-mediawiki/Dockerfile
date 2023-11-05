@@ -1,8 +1,13 @@
 FROM registry.access.redhat.com/ubi8/ubi:latest
 
-LABEL maintainer="Your Name <your.email@example.com>"
+LABEL maintainer="sudharsans91 <sudharsan.s.91@outlook.com>"
 
 # Install required packages
+RUN yum install centos-release-scl -y
+RUN yum install httpd24-httpd rh-php73 rh-php73-php rh-php73-php-mbstring rh-php73-php-mysqlnd rh-php73-php-gd rh-php73-php-xml mariadb-server mariadb -y
+
+
+
 RUN yum install -y httpd httpd-tools php php-cli php-mysqlnd php-json php-gd php-xml php-intl \
 php-mbstring php-apcu php-pecl-apcu php-pecl-memcache php-pear \
 git mysql mysql-server tar wget
