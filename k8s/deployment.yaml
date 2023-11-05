@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-mediawiki
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mediawiki
+    spec:
+      containers:
+      - name: mediawiki
+        image: mediawiki
+        env:
+        - name: MEDIAWIKI_DB_HOST
+          value: {{ .Values.database.host }}
+        # Add other environment variables here
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: mediawiki-data
+          mountPath: /var/www/html
+  volumes:
+  - name: mediawiki-data
+    emptyDir: {}
