@@ -1,8 +1,8 @@
 pipeline {
     agent any
     environment {
-        DOCKER_REGISTRY = 'your-docker-registry'
-        KUBE_NAMESPACE = 'your-namespace'
+        DOCKER_REGISTRY = 'https://hub.docker.com/r/sudharshu91/tw-ss-mediawiki'
+        KUBE_NAMESPACE = 'ss'
         KUBE_SERVER = 'your-kube-server'
         KUBE_CREDENTIALS = credentials('your-kube-credentials-id')
     }
@@ -15,7 +15,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${DOCKER_REGISTRY}/your-app:${BUILD_NUMBER} ."
+                    sh "docker build -t ${https://hub.docker.com/r/sudharshu91/tw-ss-mediawiki}/your-app:${BUILD_NUMBER} ."
                 }
             }
         }
