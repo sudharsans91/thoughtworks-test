@@ -56,7 +56,7 @@ module "spoke_network" {
 
 module "routetable" {
   source             = "./modules/route_table"
-  resource_group     = azurerm_resource_group.hub.name
+  resource_group     = azurerm_resource_group.spoke.name
   location           = var.location
   rt_name            = var.rt_name
   r_name             = var.r_name
@@ -68,7 +68,7 @@ module "log_analytics" {
   source                       = "./modules/log_analytics"
   resource_group               = azurerm_resource_group.spoke.name
   location                     = var.location
-  log_analytics_workspace_name = local.log_analytics_workspace_name
+  log_analytics_workspace_name = var.log_analytics_workspace_name
   log_analytics_workspace_sku  = var.log_analytics_workspace_sku
 }
 
@@ -76,7 +76,7 @@ module "application_gateway" {
   source                   = "./modules/application_gateway"
   resource_group           = azurerm_resource_group.spoke.name
   location                 = var.location
-  application_gateway_name = local.application_gateway_name
+  application_gateway_name = var.application_gateway_name
   application_gateway_sku  = var.application_gateway_sku
   application_gateway_tier = var.application_gateway_tier
   subnet_id                = module.spoke_network.subnet_ids["ingress-subnet"]
@@ -87,31 +87,11 @@ module "application_gateway" {
   ]
 }
 
-resource "azurerm_monitor_diagnostic_setting" "application_gateway" {
-  name                       = "${local.application_gateway_name}-${random_string.random.result}"
-  target_resource_id         = module.application_gateway.id
-  log_analytics_workspace_id = module.log_analytics.id
-  metric {
-    category = "AllMetrics"
-    retention_policy {
-      enabled = false
-    }
-  }
-  lifecycle {
-    ignore_changes = [
-      # Ignore this setting because Terraform detects changes on every run regardless of whether there are actual changes or not
-      # and this could change outside of Terraform
-      # lifecycle.ignore_changes skips operations during TF updates
-      log
-    ]
-  }
-}
-
-resource "azurerm_kubernetes_cluster" "privateaks" {
+resource "azurerm_kubernetes_cluster" "aks" {
   dns_prefix              = "${var.aks_name}-dns"
   kubernetes_version      = var.aks_version
   location                = var.location
-  name                    = local.aks_name
+  name                    = var.aks_name
   private_cluster_enabled = true
   resource_group_name     = azurerm_resource_group.spoke.name
   node_resource_group     = "${azurerm_resource_group.spoke.name}-aks"
@@ -192,7 +172,7 @@ resource "azurerm_role_assignment" "aksAcrPull" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "aks" {
-  name                       = "${local.aks_name}-${random_string.random.result}"
+  name                       = "${var.aks_name}-${random_string.random.result}"
   target_resource_id         = azurerm_kubernetes_cluster.privateaks.id
   log_analytics_workspace_id = module.log_analytics.id
   metric {
@@ -214,24 +194,24 @@ module "kv" {
   source                 = "./modules/key_vault"
   location               = var.location
   keyvault_name          = "${var.keyvault_name}-${random_string.random.result}"
-  resource_group         = azurerm_resource_group.hub.name
+  resource_group         = azurerm_resource_group.spoke.name
   private_dns_zone_id    = azurerm_private_dns_zone.kv_private_zone.id
-  hub_network_pep_subnet = module.hub_network.subnet_ids["jumpbox-subnet"]
-  hub_rg_name            = azurerm_resource_group.hub.name
-  pe_kv_name             = local.pe_kv_name
+  spoke_network_pep_subnet = module.spoke_network.subnet_ids["jumpbox-subnet"]
+  spoke_rg_name            = azurerm_resource_group.spoke.name
+  pe_kv_name             = var.pe_kv_name
   depends_on = [
     azurerm_private_dns_zone_virtual_network_link.kv_zone_to_vnet_link,
-    module.hub_network
+    module.spoke_network
   ]
 }
 module "jumpbox" {
   source                  = "./modules/jumpbox"
   location                = var.location
-  resource_group          = azurerm_resource_group.hub.name
+  resource_group          = azurerm_resource_group.spoke.name
   jumpbox_vm_name         = "${var.jumpbox_vm_name}-vm"
   jumpbox_vm_size         = var.jumpbox_vm_size
-  vnet_id                 = module.hub_network.vnet_id
-  subnet_id               = module.hub_network.subnet_ids["jumpbox-subnet"]
+  vnet_id                 = module.spoke_network.vnet_id
+  subnet_id               = module.spoke_network.subnet_ids["jumpbox-subnet"]
   dns_zone_name           = join(".", slice(split(".", azurerm_kubernetes_cluster.privateaks.private_fqdn), 1, length(split(".", azurerm_kubernetes_cluster.privateaks.private_fqdn))))
   dns_zone_resource_group = azurerm_kubernetes_cluster.privateaks.node_resource_group
   depends_on = [
@@ -250,17 +230,11 @@ resource "azurerm_role_assignment" "jumpbox_User_Access_Admin" {
 }
 module "storage_account" {
   source                   = "./modules/storage_account"
-  resource_group           = azurerm_resource_group.web.name
+  resource_group           = azurerm_resource_group.spoke.name
   location                 = var.location
-  sc_name                  = local.sc_name
-  sa_name                  = local.sa_name
-  sb_name                  = local.sb_name
-  private_dns_zone_id      = azurerm_private_dns_zone.sa_private_zone.id
   spoke_network_pep_subnet = module.spoke_network.subnet_ids["data-subnet"]
-  spoke_rg_name            = local.spoke_resource_group_name
-  pe_sa_name               = local.pe_sa_name
+  spoke_rg_name            = var.spoke_resource_group_name
   depends_on = [
-    azurerm_private_dns_zone.database_private_zone,
     module.spoke_network
   ]
 }

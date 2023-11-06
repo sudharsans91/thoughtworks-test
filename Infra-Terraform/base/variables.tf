@@ -25,3 +25,21 @@ variable "backendAzureRmKey" {
   description = "backendAzureRmKey"
   type        = string
 }
+
+variable "rt_name" { }
+variable "r_name" { }
+variable "log_analytics_workspace_name" { }
+variable "log_analytics_workspace_sku" { }
+variable "aks_name" { }
+variable "aks_version" { }
+variable "aks_sku_tier" { }
+variable "max_count" { }
+variable "min_count" { }
+variable "max_pods" { }
+variable "os_disk_size_gb" { }
+variable "nodepool_vm_size" { }
+variable "os_disk_type" { }
+variable "nodepool_vm_size" { }
+variable "network_docker_bridge_cidr" { }
+variable "network_dns_service_ip" { }
+variable "network_service_cidr" { }
