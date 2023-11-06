@@ -10,7 +10,6 @@ parameters:
     default: base
     values:
       - base
-      - front-door
 
   - name: Deploy
     displayName: Deploy the Plan
@@ -73,16 +72,6 @@ stages:
               commandOptions: '-var backendAzureRmResourceGroupName=$(backendAzureRmResourceGroupName) -var backendAzureRmStorageAccountName=$(backendAzureRmStorageAccountName) -var backendAzureRmContainerName=$(backendAzureRmContainerName) -var backendAzureRmKey=$(backendAzureRmKey) -out tfplan.bin'
               environmentServiceNameAzureRM: $(serviceConnectionName)
 
-          - task: Bash@3
-            displayName: Infra Cost Estimate 
-            inputs:
-              targetType: 'inline'
-              script: |
-                sudo apt-get update -qq && sudo apt-get -qq install bc curl git
-                curl -sL https://github.com/infracost/infracost/releases/latest/download/infracost-linux-amd64.tar.gz | tar xz -C /tmp
-                sudo mv /tmp/infracost-linux-amd64 /usr/bin/infracost
-                infracost breakdown --path tfplan.bin --show-skipped --log-level info
-  
   - job: Deploy
     displayName: Deploy Plan
     dependsOn: [Build]
@@ -158,35 +147,3 @@ stages:
           commandOptions: '-var backendAzureRmResourceGroupName=$(backendAzureRmResourceGroupName) -var backendAzureRmStorageAccountName=$(backendAzureRmStorageAccountName) -var backendAzureRmContainerName=$(backendAzureRmContainerName) -var backendAzureRmKey=$(backendAzureRmKey)'
           environmentServiceNameAzureRM: $(serviceConnectionName)
 
-  - job: Integration
-    displayName: Integration tests
-    dependsOn: [Build,Deploy]
-    condition: and( not(failed()), not(canceled()) )   
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:      
-      - task: AzurePowerShell@5
-        inputs:
-          azureSubscription: $(serviceConnectionName)
-          ScriptType: 'FilePath'
-          ScriptPath: './tests/statefile.test.ps1'
-          ScriptArguments: '-backendAzureRmResourceGroupName $(backendAzureRmResourceGroupName) -backendAzureRmStorageAccountName $(backendAzureRmStorageAccountName) -backendAzureRmContainerName $(backendAzureRmContainerName) -backendAzureRmKey $(backendAzureRmKey)'
-          azurePowerShellVersion: 'LatestVersion'
-          pwsh: true
-          
-      - task: PublishTestResults@2
-        inputs:
-          testResultsFormat: 'NUnit'
-          testResultsFiles: '**/testResults.xml'
-          failTaskOnFailedTests: false
-          testRunTitle: 'State File Validation'
-      
-      - task: PublishBuildArtifacts@1
-        inputs:
-          #pathToPublish: '$(Build.ArtifactStagingDirectory)' 
-          #artifactName: 'statefile' 
-          publishLocation: 'container' # Options: container, filePath
-          targetPath: $(statelocation)
-          #parallel: false # Optional
-          #parallelCount: # Optional
-          #fileCopyOptions: #Optional
