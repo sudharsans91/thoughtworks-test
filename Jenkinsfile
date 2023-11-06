@@ -1,40 +1,50 @@
 pipeline {
     agent any
+
     environment {
-        DOCKER_REGISTRY = 'https://hub.docker.com/r/sudharshu91/tw-ss-mediawiki'
-        KUBE_NAMESPACE = 'ss'
-        KUBE_SERVER = 'your-kube-server'
-        KUBE_CREDENTIALS = credentials('your-kube-credentials-id')
+        DOCKER_HUB_REPO = 'https://hub.docker.com/repository/docker/sudharshu91/tw-ss-mediawiki/'
+        K8S_NAMESPACE = 'ss'
+        K8S_DEPLOYMENT = 'ss-tw-mediawiki-deployment'
+        GIT_REPO_URL = 'https://github.com/sudharsans91/thoughtworks-test.git'  // Update with your Git repository URL
     }
+
     stages {
-        stage('Checkout') {
-            steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/sudharsans91/thoughtworks-test']]])
-            }
-        }
-        stage('Build Docker Image') {
+        stage('Clone Git Repository') {
             steps {
                 script {
-                    sh "docker build -t https://hub.docker.com/r/sudharshu91/tw-ss-mediawiki/your-app:latest ."
+                    // Clone the Git repository containing the Dockerfile
+                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], userRemoteConfigs: [[url: GIT_REPO_URL]]])
                 }
             }
         }
-        stage('Push Docker Image') {
+
+        stage('Extract Version from Dockerfile') {
             steps {
                 script {
-                    sh "docker push ${DOCKER_REGISTRY}/your-app1:${BUILD_NUMBER}"
+                    // Extract the version information from your Dockerfile
+                    VERSION = sh(script: "grep 'LABEL version=' Dockerfile | cut -d '=' -f2", returnStdout: true).trim()
+                    echo "Docker image version: ${VERSION}"
                 }
             }
         }
+
+        stage('Build and Push Docker Image') {
+            steps {
+                script {
+                    // Build and push your Docker image with the extracted version as the tag
+                    docker.build("${DOCKER_HUB_REPO}:${VERSION}")
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
+                        docker.push("${DOCKER_HUB_REPO}:${VERSION}")
+                    }
+                }
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    kubectlApply(
-                        credentialsId: KUBE_CREDENTIALS,
-                        serverUrl: 'ss-tw-aks-dns-pfgsgl1q.hcp.southindia.azmk8s.io',
-                        namespace: 'ss',
-                        manifests: 'path/to/kubernetes-manifests.yaml'
-                    )
+                    // Update the Kubernetes deployment with the extracted image version
+                    sh "kubectl set image deployment/${K8S_DEPLOYMENT} ${K8S_DEPLOYMENT}=${DOCKER_HUB_REPO}:${VERSION} -n ${K8S_NAMESPACE}"
                 }
             }
         }
