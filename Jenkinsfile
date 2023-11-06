@@ -31,8 +31,8 @@ pipeline {
                 script {
                     kubectlApply(
                         credentialsId: KUBE_CREDENTIALS,
-                        serverUrl: KUBE_SERVER,
-                        namespace: KUBE_NAMESPACE,
+                        serverUrl: 'ss-tw-aks-dns-pfgsgl1q.hcp.southindia.azmk8s.io',
+                        namespace: 'ss',
                         manifests: 'path/to/kubernetes-manifests.yaml'
                     )
                 }
