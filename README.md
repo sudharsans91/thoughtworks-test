@@ -1,11 +1,11 @@
-**Creating an Azure Kubernetes Service (AKS) using Terraform and an Azure DevOps pipeline**
+***Creating an Azure Kubernetes Service (AKS) using Terraform and an Azure DevOps pipeline***
 
 *Prerequisites:*
 
-An Azure subscription.
-An Azure DevOps organization and project.
-Install Terraform and the Azure CLI on your local development machine.
-Set up Azure Service Principal:
+1. An Azure subscription.
+2. An Azure DevOps organization and project.
+3. Install Terraform and the Azure CLI on your local development machine.
+4. Set up Azure Service Principal:
 
 Create an Azure Service Principal and assign the necessary permissions to it. You can do this through the Azure CLI or Azure Portal.
 Configure Azure DevOps:
