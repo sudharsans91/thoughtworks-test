@@ -1,6 +1,6 @@
 # Creating an Azure Kubernetes Service (AKS) using Terraform and an Azure DevOps pipeline
 
-*Prerequisites:*
+**Prerequisites:**
 
 1. An Azure subscription.
 2. An Azure DevOps organization and project.
@@ -22,7 +22,7 @@ Ensure we use the AzureRM provider for Terraform to interact with Azure.
 
 **Please refer Infra-Terraform Folder for terraform file and ADO Pipeline yaml code.**
 
-Store Terraform State:
+**Store Terraform State:**
 
 Use a remote backend for storing Terraform state, such as Azure Storage or Azure Remote Backend in Terraform Cloud. This is crucial for state management in a multi-user environment.
 Create an Azure DevOps Pipeline:
@@ -45,7 +45,9 @@ Deploy Application: Deploy our application to the AKS cluster using kubectl or o
 
 # Creating mediawiki image using Dockerfile
 
-To create a Docker image for MediaWiki, we can use a Dockerfile. MediaWiki is a web application that requires a web server and a database, Apache and MySQL.
+To create a Docker image for MediaWiki, we can use a Dockerfile.
+
+Please refer **Dockerfile** in this repo
 
 Dockerfile does the following:
 
@@ -71,15 +73,15 @@ After building the image, we can create a container from it and link it to a MyS
 
 ##########################################################
 
-MediaWiki Docker image in our Docker Hub account, we can deploy it to our existing AKS cluster by creating a Kubernetes deployment and service. Here's how to do it:
+MediaWiki Docker image in our Docker Hub account, we can deploy it to our existing AKS cluster by creating a Kubernetes deployment and service.
 
-Step 1: Authenticate with Docker Hub
+**Step 1: Authenticate with Docker Hub**
 
 Before we can deploy the Docker image from our Docker Hub account, we need to authenticate with Docker Hub on our AKS cluster. we can use Kubernetes secrets to store our Docker Hub credentials securely.
 
 Create a Docker Hub secret:
 
-Step 2: Create a Kubernetes Deployment
+**Step 2: Create a Kubernetes Deployment**
 
 Create a Kubernetes deployment YAML file for our MediaWiki application. Replace our-image-name with the name of our MediaWiki Docker image on Docker Hub.
 
@@ -101,6 +103,8 @@ Once the external IP address is available, we can access our MediaWiki applicati
 
 #########################################################
 
+# App Update using Jenkins
+
 To update a deployment running in Azure AKS (Azure Kubernetes Service) using a custom Docker image from our own Docker Hub registry using a Jenkins pipeline, we can follow these steps:
 
 Set Up Prerequisites:
@@ -110,7 +114,7 @@ Make sure we have a Docker image of our application hosted in our Docker Hub reg
 Set up Jenkins with the necessary plugins (such as Docker, Azure Credentials, Kubernetes, etc.).
 Create a Jenkins Pipeline:
 Create a Jenkins pipeline script for the deployment update. We can use a Jenkinsfile for this purpose. 
-
+'''
 pipeline {
     agent any
 
@@ -147,7 +151,7 @@ pipeline {
         }
     }
 }
-
+'''
 Configure Jenkins Job:
 Azure and Docker Hub using the provided credentials in Jenkins.
 AKS cluster and AKS credentials are correctly set up before running the pipeline.
