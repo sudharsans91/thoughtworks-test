@@ -1,4 +1,4 @@
-Creating an Azure Kubernetes Service (AKS) using Terraform and an Azure DevOps pipeline involves several steps. Here's a high-level overview of the process:
+Creating an Azure Kubernetes Service (AKS) using Terraform and an Azure DevOps pipeline
 
 Prerequisites:
 
@@ -103,7 +103,6 @@ Make sure you have a Docker image of your application hosted in your Docker Hub 
 Set up Jenkins with the necessary plugins (such as Docker, Azure Credentials, Kubernetes, etc.).
 Create a Jenkins Pipeline:
 Create a Jenkins pipeline script for the deployment update. You can use a Jenkinsfile for this purpose. Here's an example Jenkinsfile:
-
 
 pipeline {
     agent any
