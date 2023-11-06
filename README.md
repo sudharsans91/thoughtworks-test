@@ -20,7 +20,7 @@ Create the Terraform Configuration:
 Create a Terraform configuration that defines our AKS cluster. we'll need to include resources like a Resource Group, AKS Cluster, and optionally other Azure resources.
 Ensure we use the AzureRM provider for Terraform to interact with Azure.
 
-Please refer Infra-Terraform Folder for terraform file and ADO Pipeline yaml code.
+**Please refer Infra-Terraform Folder for terraform file and ADO Pipeline yaml code.**
 
 Store Terraform State:
 
@@ -39,7 +39,7 @@ Plan: Run terraform plan to preview the changes to be applied.
 Apply: If the plan looks good, run terraform apply to create or update the AKS cluster.
 Deploy Application: Deploy our application to the AKS cluster using kubectl or other deployment tools.
 
-Infra-Terraform > pipelines > azure-pipelines.yml
+**Infra-Terraform > pipelines > azure-pipelines.yml**
 
 ############################################################
 
