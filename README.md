@@ -1,4 +1,4 @@
-#Creating an Azure Kubernetes Service (AKS) using Terraform and an Azure DevOps pipeline
+# Creating an Azure Kubernetes Service (AKS) using Terraform and an Azure DevOps pipeline
 
 *Prerequisites:*
 
@@ -42,6 +42,8 @@ Deploy Application: Deploy our application to the AKS cluster using kubectl or o
 **Infra-Terraform > pipelines > azure-pipelines.yml**
 
 ############################################################
+
+# Creating mediawiki image using Dockerfile
 
 To create a Docker image for MediaWiki, we can use a Dockerfile. MediaWiki is a web application that requires a web server and a database, Apache and MySQL.
 
