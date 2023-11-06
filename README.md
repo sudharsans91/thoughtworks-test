@@ -41,8 +41,6 @@ Deploy Application: Deploy our application to the AKS cluster using kubectl or o
 
 **Infra-Terraform > pipelines > azure-pipelines.yml**
 
-############################################################
-
 # Creating mediawiki image using Dockerfile
 
 To create a Docker image for MediaWiki, we can use a Dockerfile.
@@ -70,8 +68,6 @@ we can build this Docker image using the docker build command:
 docker build -t mediawiki-image .
 
 After building the image, we can create a container from it and link it to a MySQL database container or use a MySQL container.
-
-##########################################################
 
 MediaWiki Docker image in our Docker Hub account, we can deploy it to our existing AKS cluster by creating a Kubernetes deployment and service.
 
@@ -101,8 +97,6 @@ Step 4: Access MediaWiki
 
 Once the external IP address is available, we can access our MediaWiki application by navigating to http://<external-ip> in our web browser.
 
-#########################################################
-
 # App Update using Jenkins
 
 To update a deployment running in Azure AKS (Azure Kubernetes Service) using a custom Docker image from our own Docker Hub registry using a Jenkins pipeline, we can follow these steps:
@@ -113,7 +107,7 @@ Ensure we have an Azure AKS cluster up and running.
 Make sure we have a Docker image of our application hosted in our Docker Hub registry.
 Set up Jenkins with the necessary plugins (such as Docker, Azure Credentials, Kubernetes, etc.).
 Create a Jenkins Pipeline:
-Create a Jenkins pipeline script for the deployment update. We can use a Jenkinsfile for this purpose. 
+Create a Jenkins pipeline script for the deployment update. We can use a Jenkinsfile for this purpose.
 '''
 pipeline {
     agent any
@@ -160,5 +154,3 @@ Configure our job to use the above Jenkinsfile
 Build and Trigger:
 
 Build and trigger the Jenkins job. It will update the deployment in our Azure AKS cluster with the new Docker image from our Docker Hub registry.
-
-
