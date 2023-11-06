@@ -5,7 +5,7 @@ pipeline {
         DOCKER_REGISTRY = 'https://hub.docker.com/repository/docker/sudharshu91/'
         IMAGE_NAME = 'tw-ss-mediawiki'
     }
-
+/*
     stages {
         stage('Check for New Docker Image') {
             steps {
@@ -32,7 +32,7 @@ pipeline {
                 }
             }
         }
-
+*/
         stage('Deploy to AKS') {
             steps {
                 script {
