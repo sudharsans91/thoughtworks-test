@@ -1,4 +1,16 @@
-# Creating an Azure Kubernetes Service (AKS) using Terraform and an Azure DevOps pipeline
+# DevOps - Mediawiki Deployment and Update
+
+**Tools Involved**
+
+1. Cloud - Azure
+2. Version Control - Git
+3. Infra Automation - Azure DevOps
+4. IaC - Terraform
+5. Image Creation  - Docker & Docker Hub
+6. Container Orchestration - Kubernetes
+7. Application deployment Update - CICD - Jenkins
+
+**Creating an Azure Kubernetes Service (AKS) using Terraform and Azure DevOps pipeline**
 
 **Prerequisites:**
 
@@ -14,7 +26,7 @@ Create a new Azure DevOps project if we haven't already.
 Set up a Service Connection to link our Azure DevOps project to our Azure subscription. Use the Service Principal created in step 2.
 Initialize a Git Repository:
 
-Create a Git repository in our Azure DevOps project where we'll store our Terraform code.
+Create a Git repository in our Azure DevOps project where we store our Terraform code.
 Create the Terraform Configuration:
 
 Create a Terraform configuration that defines our AKS cluster. we'll need to include resources like a Resource Group, AKS Cluster, and optionally other Azure resources.
