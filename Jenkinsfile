@@ -28,7 +28,7 @@ pipeline {
             }
         }
 
-        stage('Build and Push Docker Image') {
+        stage('Build and Push Docker Image2') {
             steps {
                 script {
                     // Build and push your Docker image with the extracted version as the tag
