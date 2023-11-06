@@ -1,98 +1,158 @@
-# thoughtworks-test
-2
-
-Deploying a MediaWiki application with MySQL to an Azure AKS (Azure Kubernetes Service) cluster involves several steps, including creating the necessary Kubernetes manifests, setting up Azure services, and configuring MediaWiki. Here's a general outline of the process:
+Creating an Azure Kubernetes Service (AKS) using Terraform and an Azure DevOps pipeline involves several steps. Here's a high-level overview of the process:
 
 Prerequisites:
-Before you begin, make sure you have the following prerequisites in place:
 
-Azure subscription and resource group.
-Azure Kubernetes Service (AKS) cluster created.
-Azure CLI and kubectl installed.
-Helm installed on your local machine.
-Create Kubernetes Manifests:
-You'll need to create Kubernetes manifests for MediaWiki and MySQL. This typically involves writing YAML files for Deployments, Services, ConfigMaps, and Secrets. Here's a simplified example:
+An Azure subscription.
+An Azure DevOps organization and project.
+Install Terraform and the Azure CLI on your local development machine.
+Set up Azure Service Principal:
 
-Create a mediawiki-deployment.yaml for MediaWiki.
-Create a mysql-deployment.yaml for MySQL.
-Create a Service for each deployment.
-Deploy MySQL:
-Deploy MySQL to your AKS cluster using kubectl apply -f mysql-deployment.yaml. Ensure you use a PersistentVolume or Azure Disk to store the MySQL data.
+Create an Azure Service Principal and assign the necessary permissions to it. You can do this through the Azure CLI or Azure Portal.
+Configure Azure DevOps:
 
-Deploy MediaWiki:
-Deploy MediaWiki to the AKS cluster using kubectl apply -f mediawiki-deployment.yaml. Make sure you configure the environment variables and volume mounts for MediaWiki to connect to the MySQL database.
+Create a new Azure DevOps project if you haven't already.
+Set up a Service Connection to link your Azure DevOps project to your Azure subscription. Use the Service Principal created in step 2.
+Initialize a Git Repository:
 
-Azure Database for MySQL (Optional):
-Instead of running MySQL within the AKS cluster, you can consider using Azure Database for MySQL, a managed service for MySQL. In this case, MediaWiki should be configured to connect to the Azure Database for MySQL.
+Create a Git repository in your Azure DevOps project where you'll store your Terraform code.
+Create the Terraform Configuration:
 
-Ingress Controller:
-Set up an Ingress Controller like Nginx Ingress or Azure Application Gateway to route external traffic to your MediaWiki application.
+Create a Terraform configuration that defines your AKS cluster. You'll need to include resources like a Resource Group, AKS Cluster, and optionally other Azure resources.
+Ensure you use the AzureRM provider for Terraform to interact with Azure.
+Store Terraform State:
 
-DNS Configuration:
-Configure DNS settings to point your domain to the IP address or hostname associated with the Ingress Controller.
+Use a remote backend for storing Terraform state, such as Azure Storage or Azure Remote Backend in Terraform Cloud. This is crucial for state management in a multi-user environment.
+Create an Azure DevOps Pipeline:
 
-Azure Load Balancer (Optional):
-If you are using an Ingress Controller, you may need to set up an Azure Load Balancer to distribute traffic to your AKS cluster.
+In your Azure DevOps project, create a new pipeline and choose the repository where your Terraform code is stored.
+Configure Pipeline Variables:
 
-Security and Network Policies:
-Implement security best practices like Network Policies, Role-Based Access Control (RBAC), and secure secrets management.
+Set up pipeline variables for sensitive information such as the Azure Service Principal credentials, resource group name, and other configuration variables.
+Create Pipeline Stages:
 
-Monitoring and Logging:
-Set up monitoring and logging solutions like Azure Monitor, Prometheus, Grafana, or ELK stack to keep track of your application's performance.
+Create pipeline stages in your Azure DevOps pipeline. Here's a simple example of stages you might include:
+Initialize: Initialize Terraform and install necessary dependencies.
+Plan: Run terraform plan to preview the changes to be applied.
+Apply: If the plan looks good, run terraform apply to create or update the AKS cluster.
+Deploy Application: Deploy your application to the AKS cluster using kubectl or other deployment tools.
 
-Backup and Disaster Recovery:
-Implement backup and disaster recovery strategies for your MySQL data and application.
+############################################################
 
-Scaling and Auto-Scaling:
-Configure Horizontal Pod Autoscaling and cluster scaling as needed based on the application's demand.
+To create a Docker image for MediaWiki, we can use a Dockerfile. MediaWiki is a web application that requires a web server and a database, Apache and MySQL.
 
-Secrets Management:
-Store sensitive information like database credentials in Kubernetes Secrets or a key vault.
+Dockerfile does the following:
 
-Testing and Validation:
-Thoroughly test your deployment to ensure that MediaWiki is functioning as expected.
+It starts with the official PHP image with Apache as the base image.
 
-Maintenance and Updates:
-Regularly update your application and Kubernetes cluster, and apply security patches.
+Sets environment variables for the MediaWiki version and installation path.
 
-Documentation:
-1. To deploy a MediaWiki application using Helm, you can create a Helm chart that defines the Kubernetes resources and configurations needed to run MediaWiki. Helm simplifies the deployment process by allowing you to define, package, and manage your Kubernetes application as a chart. Here are the steps to achieve this:
+Installs system dependencies and PHP extensions required for MediaWiki to function properly.
+
+Downloads and extracts the MediaWiki source code to the specified installation path.
+
+Configures Apache, enabling the rewrite module and setting permissions on the MediaWiki files.
+
+Exposes port 80 to allow access to the web server.
+
+Defines the default command to start Apache.
+
+You can build this Docker image using the docker build command:
+
+docker build -t mediawiki-image .
+
+After building the image, you can create a container from it and link it to a MySQL database container or use a MySQL container.
+
+##########################################################
+
+MediaWiki Docker image in your Docker Hub account, you can deploy it to your existing AKS cluster by creating a Kubernetes deployment and service. Here's how to do it:
+
+Step 1: Authenticate with Docker Hub
+
+Before you can deploy the Docker image from your Docker Hub account, you need to authenticate with Docker Hub on your AKS cluster. You can use Kubernetes secrets to store your Docker Hub credentials securely.
+
+Create a Docker Hub secret:
+
+Step 2: Create a Kubernetes Deployment
+
+Create a Kubernetes deployment YAML file for your MediaWiki application. Replace your-image-name with the name of your MediaWiki Docker image on Docker Hub.
+
+Apply the deployment to create the MediaWiki pod:
+
+kubectl apply -f mediawiki-deployment.yaml
+Step 3: Create a Kubernetes Service
+
+Create a Kubernetes service YAML file to expose the MediaWiki deployment:
+
+Apply the service definition to create a LoadBalancer service:
+
+kubectl apply -f mediawiki-service.yaml
+It may take some time for the LoadBalancer service to provision an external IP address.
+
+Step 4: Access MediaWiki
+
+Once the external IP address is available, you can access your MediaWiki application by navigating to http://<external-ip> in your web browser.
+
+#########################################################
+
+To update a deployment running in Azure AKS (Azure Kubernetes Service) using a custom Docker image from your own Docker Hub registry using a Jenkins pipeline, you can follow these steps:
+
+Set Up Prerequisites:
+
+Ensure you have an Azure AKS cluster up and running.
+Make sure you have a Docker image of your application hosted in your Docker Hub registry.
+Set up Jenkins with the necessary plugins (such as Docker, Azure Credentials, Kubernetes, etc.).
+Create a Jenkins Pipeline:
+Create a Jenkins pipeline script for the deployment update. You can use a Jenkinsfile for this purpose. Here's an example Jenkinsfile:
 
 
-Create a Helm Chart:
+pipeline {
+    agent any
 
-You can create a Helm chart for deploying MediaWiki by running the following Helm command:
+    environment {
+        AZURE_CREDENTIALS = credentials('your-azure-credentials-id')
+        DOCKER_HUB_CREDENTIALS = credentials('your-docker-hub-credentials-id')
+    }
 
-helm create mediawiki
-This command will create a new Helm chart named "mediawiki."
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
-Configure the Helm Chart:
+        stage('Update AKS Deployment') {
+            steps {
+                script {
+                    def image = 'your-docker-hub-username/your-image-name:latest'
+                    def appName = 'your-application-name'
+                    def resourceGroupName = 'your-resource-group-name'
+                    def aksClusterName = 'your-aks-cluster-name'
+                    def deploymentName = 'your-deployment-name'
 
-Inside the mediawiki chart directory, you'll find various subdirectories and files. You need to configure the chart to deploy MediaWiki. Below is a simplified example of how to configure the chart. You may need to customize it further based on your specific requirements.
+                    withCredentials([azureServicePrincipal(credentialsId: 'your-azure-credentials-id', variable: 'AZURE_CREDENTIALS')]) {
+                        sh """
+                        az aks get-credentials --resource-group $resourceGroupName --name $aksClusterName
+                        kubectl set image deployment/$deploymentName $appName=$image
+                        kubectl rollout status deployment/$deploymentName
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
+In this Jenkinsfile:
 
-Chart.yaml: Update the metadata in the Chart.yaml file, specifying the chart name and version.
+Replace your-azure-credentials-id with the ID of your Azure service principal credentials stored in Jenkins.
+Replace your-docker-hub-credentials-id with the ID of your Docker Hub credentials stored in Jenkins.
+Modify other variables like your-docker-hub-username, your-image-name, your-application-name, your-resource-group-name, your-aks-cluster-name, and your-deployment-name to match your specific setup.
+Configure Jenkins Job:
 
-values.yaml: Customize values in the values.yaml file. For example, set the database username, password, and other MediaWiki-related settings.
+Create a new Jenkins job and select "Pipeline" as the job type.
+Configure your job to use the Jenkinsfile you created in the previous step.
+Build and Trigger:
 
-templates/deployment.yaml: Create a Deployment resource for MediaWiki and define the necessary environment variables, volumes, and containers.
+Build and trigger the Jenkins job. It will update the deployment in your Azure AKS cluster with the new Docker image from your Docker Hub registry.
+This pipeline script assumes you have already authenticated to Azure and Docker Hub using the provided credentials in Jenkins. Make sure your AKS cluster and AKS credentials are correctly set up before running the pipeline.
 
-templates/service.yaml: Create a Service resource for accessing MediaWiki.
-
-templates/pvc.yaml: Define a PersistentVolumeClaim if you want to use persistent storage.
-
-
-Install the Helm Chart:
-
-To install the Helm chart, run the following command in the chart's directory:
-
-helm install my-mediawiki-release ./mediawiki
-Replace my-mediawiki-release with your desired release name.
-
-Access MediaWiki:
-
-After the deployment is complete, you can access MediaWiki by forwarding the service's port to your local machine using kubectl port-forward. For example:
-
-kubectl port-forward service/my-mediawiki-release-mediawiki 8080:80
-You can then access MediaWiki in your web browser by visiting http://localhost:8080.
-
-This is a simplified example of how to deploy MediaWiki using Helm. Depending on your specific requirements and infrastructure, you may need to customize the Helm chart further. Additionally, consider configuring persistent storage for your database and implementing other necessary configurations for a production-grade deployment.
+Remember to adapt the script to your specific deployment and environment, and ensure that the necessary plugins and dependencies are installed in your Jenkins instance.
