@@ -15,7 +15,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${https://hub.docker.com/r/sudharshu91/tw-ss-mediawiki}/your-app:${BUILD_NUMBER} ."
+                    sh "docker build -t https://hub.docker.com/r/sudharshu91/tw-ss-mediawiki/your-app:latest ."
                 }
             }
         }
