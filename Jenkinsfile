@@ -22,7 +22,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    sh "docker push ${DOCKER_REGISTRY}/your-app:${BUILD_NUMBER}"
+                    sh "docker push ${DOCKER_REGISTRY}/your-app1:${BUILD_NUMBER}"
                 }
             }
         }
