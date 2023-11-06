@@ -77,9 +77,17 @@ Defines the default command to start Apache.
 
 we can build this Docker image using the docker build command:
 
+'''
 docker build -t mediawiki-image .
+'''
 
-After building the image, we can create a container from it and link it to a MySQL database container or use a MySQL container.
+**Push the built image to our docker hub registry**
+
+docker login
+
+docker tag ss-yw-mediawiki-1.40.1-image sudharshu91/tw-ss-mediawiki:1.40.1
+
+docker push sudharshu91/tw-ss-mediawiki:1.40.1
 
 MediaWiki Docker image in our Docker Hub account, we can deploy it to our existing AKS cluster by creating a Kubernetes deployment and service.
 
