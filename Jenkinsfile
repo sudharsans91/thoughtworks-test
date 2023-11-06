@@ -33,8 +33,7 @@ pipeline {
                 script {
                     // Build and push your Docker image with the extracted version as the tag
                     docker.build("${DOCKER_HUB_REPO}:${VERSION}")
-                    docker.withRegistry('        DOCKER_HUB_REPO = 'https://hub.docker.com/repository/docker/sudharshu91/tw-ss-mediawiki/'
-', 'docker-hub-credentials') {
+                    docker.withRegistry('https://hub.docker.com/repository/docker/sudharshu91/tw-ss-mediawiki/', 'docker-hub-credentials') {
                         docker.push("${DOCKER_HUB_REPO}:${VERSION}")
                     }
                 }
