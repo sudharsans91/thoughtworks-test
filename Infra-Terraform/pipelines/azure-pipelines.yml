@@ -1,0 +1,192 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+parameters:
+  # Corresponds to a subfolder name in the repo
+  - name: envType
+    displayName: Environment Type
+    type: string
+    default: base
+    values:
+      - base
+      - front-door
+
+  - name: Deploy
+    displayName: Deploy the Plan
+    type: boolean
+    default: false
+  - name: Destroy
+    displayName: Destroy all resources
+    type: boolean
+    default: false
+  
+trigger:
+- none
+
+resources:
+- repo: self
+
+variables:
+  - template: ../variables/variables.yaml
+
+stages:
+- stage: Build
+  displayName: Build&Deploy
+  jobs:  
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+          - task: CopyFiles@2
+            inputs:
+              sourceFolder: ./${{ parameters.envType }}
+              targetFolder: ./
+          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
+            displayName: Terraform Install
+            inputs:
+              terraformVersion: $(terraformVersion)
+          
+          - task: TerraformTaskV1@0
+            displayName: Terraform Initialization
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: $(serviceConnectionName)
+              backendAzureRmResourceGroupName: $(backendAzureRmResourceGroupName)
+              backendAzureRmStorageAccountName: $(backendAzureRmStorageAccountName)
+              backendAzureRmContainerName: $(backendAzureRmContainerName)
+              backendAzureRmKey: $(backendAzureRmKey)
+              
+          - task: TerraformTaskV1@0
+            displayName: Terraform Validation
+            inputs:
+              provider: 'azurerm'
+              command: 'validate'
+
+          - task: TerraformTaskV1@0
+            displayName: Terraform Plan
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              commandOptions: '-var backendAzureRmResourceGroupName=$(backendAzureRmResourceGroupName) -var backendAzureRmStorageAccountName=$(backendAzureRmStorageAccountName) -var backendAzureRmContainerName=$(backendAzureRmContainerName) -var backendAzureRmKey=$(backendAzureRmKey) -out tfplan.bin'
+              environmentServiceNameAzureRM: $(serviceConnectionName)
+
+          - task: Bash@3
+            displayName: Infra Cost Estimate 
+            inputs:
+              targetType: 'inline'
+              script: |
+                sudo apt-get update -qq && sudo apt-get -qq install bc curl git
+                curl -sL https://github.com/infracost/infracost/releases/latest/download/infracost-linux-amd64.tar.gz | tar xz -C /tmp
+                sudo mv /tmp/infracost-linux-amd64 /usr/bin/infracost
+                infracost breakdown --path tfplan.bin --show-skipped --log-level info
+  
+  - job: Deploy
+    displayName: Deploy Plan
+    dependsOn: [Build]
+    condition: and( not(failed()), not(canceled()), eq('${{ parameters.deploy }}', true))
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: ./${{ parameters.envType }}
+          targetFolder: ./
+      - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
+        displayName: Terraform Install
+        inputs:
+          terraformVersion: $(terraformVersion)
+          
+      - task: TerraformTaskV1@0
+        displayName: Terraform Initialization
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: $(serviceConnectionName)
+          backendAzureRmResourceGroupName: $(backendAzureRmResourceGroupName)
+          backendAzureRmStorageAccountName: $(backendAzureRmStorageAccountName)
+          backendAzureRmContainerName: $(backendAzureRmContainerName)
+          backendAzureRmKey: $(backendAzureRmKey)   
+
+      - task: TerraformTaskV1@0
+        displayName: Terraform Apply
+        enabled: true
+        condition: eq('${{ parameters.deploy }}', true)
+        inputs:
+          provider: 'azurerm'
+          command: 'apply'
+          commandOptions: '-var backendAzureRmResourceGroupName=$(backendAzureRmResourceGroupName) -var backendAzureRmStorageAccountName=$(backendAzureRmStorageAccountName) -var backendAzureRmContainerName=$(backendAzureRmContainerName) -var backendAzureRmKey=$(backendAzureRmKey)'
+          environmentServiceNameAzureRM: $(serviceConnectionName)
+
+          
+  - job: Destroy
+    displayName: Destroy Plan
+    dependsOn: [Build]
+    condition: and( not(failed()), not(canceled()), eq('${{ parameters.destroy }}', true))    
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: ./${{ parameters.envType }}
+          targetFolder: ./
+          
+      - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
+        displayName: Terraform Install
+        inputs:
+          terraformVersion: $(terraformVersion)
+
+      - task: TerraformTaskV1@0
+        displayName: Terraform Initialization
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: $(serviceConnectionName)
+          backendAzureRmResourceGroupName: $(backendAzureRmResourceGroupName)
+          backendAzureRmStorageAccountName: $(backendAzureRmStorageAccountName)
+          backendAzureRmContainerName: $(backendAzureRmContainerName)
+          backendAzureRmKey: $(backendAzureRmKey)
+      - task: TerraformTaskV1@0
+        displayName: Terraform Destroy
+        enabled: true
+        condition: eq('${{ parameters.destroy }}', true)
+        inputs:
+          provider: 'azurerm'
+          command: 'destroy'
+          commandOptions: '-var backendAzureRmResourceGroupName=$(backendAzureRmResourceGroupName) -var backendAzureRmStorageAccountName=$(backendAzureRmStorageAccountName) -var backendAzureRmContainerName=$(backendAzureRmContainerName) -var backendAzureRmKey=$(backendAzureRmKey)'
+          environmentServiceNameAzureRM: $(serviceConnectionName)
+
+  - job: Integration
+    displayName: Integration tests
+    dependsOn: [Build,Deploy]
+    condition: and( not(failed()), not(canceled()) )   
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:      
+      - task: AzurePowerShell@5
+        inputs:
+          azureSubscription: $(serviceConnectionName)
+          ScriptType: 'FilePath'
+          ScriptPath: './tests/statefile.test.ps1'
+          ScriptArguments: '-backendAzureRmResourceGroupName $(backendAzureRmResourceGroupName) -backendAzureRmStorageAccountName $(backendAzureRmStorageAccountName) -backendAzureRmContainerName $(backendAzureRmContainerName) -backendAzureRmKey $(backendAzureRmKey)'
+          azurePowerShellVersion: 'LatestVersion'
+          pwsh: true
+          
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: 'NUnit'
+          testResultsFiles: '**/testResults.xml'
+          failTaskOnFailedTests: false
+          testRunTitle: 'State File Validation'
+      
+      - task: PublishBuildArtifacts@1
+        inputs:
+          #pathToPublish: '$(Build.ArtifactStagingDirectory)' 
+          #artifactName: 'statefile' 
+          publishLocation: 'container' # Options: container, filePath
+          targetPath: $(statelocation)
+          #parallel: false # Optional
+          #parallelCount: # Optional
+          #fileCopyOptions: #Optional
