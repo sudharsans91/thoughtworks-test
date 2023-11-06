@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: mediawiki
-          image: yourdockerhubusername/mediawiki:1.40.1
+          image: sudharshu91/tw-ss-mediawiki:1.40.1
           ports:
             - containerPort: 80
           env:

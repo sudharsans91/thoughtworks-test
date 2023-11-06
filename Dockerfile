@@ -1,47 +1,35 @@
-FROM registry.access.redhat.com/ubi8/ubi:latest
+# Use the official PHP and Apache base image
+FROM php:7.4-apache
 
-LABEL maintainer="sudharsans91 <sudharsan.s.91@outlook.com>"
-
-# Install required packages
-RUN yum install centos-release-scl -y
-RUN yum install httpd24-httpd rh-php73 rh-php73-php rh-php73-php-mbstring rh-php73-php-mysqlnd rh-php73-php-gd rh-php73-php-xml mariadb-server mariadb -y
-
-
-
-RUN yum install -y httpd httpd-tools php php-cli php-mysqlnd php-json php-gd php-xml php-intl \
-php-mbstring php-apcu php-pecl-apcu php-pecl-memcache php-pear \
-git mysql mysql-server tar wget
-
-# Install Composer (PHP dependency manager)
-RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
-    && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
-    && php -r "unlink('composer-setup.php');"
-
-# Configure Apache
-RUN sed -i 's/Listen 80/Listen 8080/g' /etc/httpd/conf/httpd.conf
-
-# Set up a MediaWiki directory
+# Set the working directory to /var/www/html
 WORKDIR /var/www/html
 
-# Clone MediaWiki
-RUN git clone https://gerrit.wikimedia.org/r/mediawiki/core.git .
+# Install required PHP extensions and other dependencies
+RUN apt-get update && apt-get install -y \
+    libicu-dev \
+    libpq-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) intl pdo pdo_pgsql gd
 
-# Install MediaWiki
-RUN git submodule update --init --recursive
-RUN composer install --no-dev
+# Download and extract MediaWiki 1.40.1
+RUN curl -O https://releases.wikimedia.org/mediawiki/1.40/mediawiki-1.40.1.tar.gz \
+    && tar -xzvf mediawiki-1.40.1.tar.gz --strip-components=1 \
+    && rm mediawiki-1.40.1.tar.gz
 
-# Configure MySQL
-RUN systemctl enable mysqld
-RUN systemctl start mysqld
-RUN mysql_secure_installation
+# Set the required permissions for MediaWiki
+RUN chown -R www-data:www-data /var/www/html
 
-# Set up MediaWiki database
-RUN mysql -u root -e "CREATE DATABASE wikidb;"
-RUN mysql -u root -e "GRANT INDEX, CREATE, ALTER, LOCK TABLES, INSERT, UPDATE, DELETE, DROP, SELECT, RELOAD, FILE, CREATE TEMPORARY TABLES ON wikidb.* TO 'wikiuser'@'localhost' IDENTIFIED BY 'wikipassword';"
-RUN mysql -u root -e "FLUSH PRIVILEGES;"
+# Enable mod_rewrite for Apache
+RUN a2enmod rewrite
 
-# Expose port 8080
-EXPOSE 8080
+# Copy the default Apache configuration
+COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 
-# Start Apache and MediaWiki
-CMD ["/usr/sbin/httpd", "-DFOREGROUND"]
+# Expose port 80 for the web server
+EXPOSE 80
+
+# Start the Apache web server
+CMD ["apache2-foreground"]
